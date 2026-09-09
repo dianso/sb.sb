@@ -57,7 +57,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun build src/index.ts --compile --target=bun-windows-x64.exe --outfile=sb-windows-amd64.exe
+      - run: bun build src/index.ts --compile --target=bun-windows-x64 --outfile=sb-windows-amd64.exe
       - uses: actions/upload-artifact@v4
         with:
           name: sb-windows-amd64

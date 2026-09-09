@@ -1,0 +1,12 @@
+# 阻止构建上下文携带不必要的文件/敏感数据
+node_modules/
+.bun-cache/
+.git/
+
+# 本地敏感配置与部署产物
+.env
+*.log
+
+# 本地编译的二进制与部署脚本
+sb-linux-*
+install-service.sh

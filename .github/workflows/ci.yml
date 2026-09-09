@@ -1,0 +1,122 @@
+# sb.sb 论坛 RSS 推送 —— 持续集成 / 发布 / 容器镜像
+#
+# 触发：
+#   - 推送到 main：运行类型检查，并推送 ghcr 镜像（latest / main）
+#   - 推送 v* 标签：额外交叉编译 amd64/arm64（含 alpine 与 Windows）二进制，
+#                  发布到 GitHub Release，并推送 ghcr 版本标签
+name: ci
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---- 基础校验：typecheck（CI 承担类型检查） ----
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2 # 默认使用 latest Bun
+      - run: bun ci
+      - run: bun run typecheck
+
+  # ---- 交叉编译二进制（仅打标签时）----
+  build-binaries:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: bun-linux-x64            # glibc amd64
+            artifact: sb-linux-amd64
+          - target: bun-linux-aarch64        # glibc arm64
+            artifact: sb-linux-arm64
+          - target: bun-linux-x64-musl       # alpine amd64
+            artifact: sb-linux-amd64-musl
+          - target: bun-linux-aarch64-musl   # alpine arm64
+            artifact: sb-linux-arm64-musl
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun build src/index.ts --compile --target=${{ matrix.target }} --outfile=${{ matrix.artifact }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+          if-no-files-found: error
+
+  build-windows:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun build src/index.ts --compile --target=bun-windows-x64.exe --outfile=sb-windows-amd64.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sb-windows-amd64
+          path: sb-windows-amd64.exe
+          if-no-files-found: error
+
+  # ---- 汇总二进制并发布到 GitHub Release（仅打标签时）----
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build-binaries, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*/*
+          generate_release_notes: true
+
+  # ---- 构建并推送 ghcr 容器镜像（debian + alpine，支持 amd64/arm64）----
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor:
+          - runtime: debian:trixie-slim   # glibc
+            bun_suffix: ""
+            tag_suffix: ""                # ghcr.io/dianso/sb.sb:latest + :v<tag>
+            alias: latest
+          - runtime: alpine               # musl
+            bun_suffix: "-musl"
+            tag_suffix: "-alpine"         # ghcr.io/dianso/sb.sb:alpine + :v<tag>-alpine
+            alias: alpine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3 # 运行阶段非当前架构 RUN 需要
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            BUN_SUFFIX=${{ matrix.flavor.bun_suffix }}
+            RUNTIME_IMAGE=${{ matrix.flavor.runtime }}
+          tags: |
+            ghcr.io/dianso/sb.sb:${{ matrix.flavor.alias }}
+            ghcr.io/dianso/sb.sb:${{ github.ref_name }}${{ matrix.flavor.tag_suffix }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

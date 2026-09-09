@@ -8,6 +8,42 @@
   <strong>论坛新帖实时推送 · 关键词正则订阅 · 零爬虫</strong>
 </p>
 
+<p align="center">
+  <a href="https://github.com/dianso/sb.sb/releases/latest"><img src="https://img.shields.io/github/v/release/dianso/sb.sb?sort=semver&style=flat-square&label=Release" alt="Release"></a>
+  <a href="https://github.com/dianso/sb.sb/actions/workflows/ci.yml"><img src="https://github.com/dianso/sb.sb/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/dianso/sb.sb/pkgs/container/sb.sb"><img src="https://img.shields.io/badge/ghcr.io-dianso%2Fsb.sb-informational?logo=docker&style=flat-square" alt="GHCR"></a>
+</p>
+
+***
+
+## 📦 获取 · 部署
+
+预编译二进制与容器镜像均已发布：
+
+- **GitHub Release**（amd64 / arm64 / Alpine / Windows）：https://github.com/dianso/sb.sb/releases/latest
+- **容器镜像（ghcr.io）**：
+  - Debian 版（glibc）：`docker pull ghcr.io/dianso/sb.sb:latest`
+  - Alpine 版（musl）：`docker pull ghcr.io/dianso/sb.sb:alpine`
+
+> 容器镜像由 [CI](https://github.com/dianso/sb.sb/actions/workflows/ci.yml) 自动构建，覆盖 amd64 / arm64 双架构。
+
+### 二进制部署
+
+安装到指定目录并注册 systemd 服务（`install-service.sh` 未入库，见仓库 Release 附件）：
+
+```bash
+sudo bash install-service.sh   # 默认装到 /home/huo/sb 并创建 sb-bot.service
+```
+
+### Docker 运行
+
+```bash
+docker run -d --name sb-bot --restart=always \
+  -e SB_DB_HOST=... -e SB_DB_PASSWORD=... \
+  -e SB_TELEGRAM_TOKEN=... -e SB_TELEGRAM_CHAT_ID=... \
+  ghcr.io/dianso/sb.sb:latest
+```
+
 ***
 
 ## 特性

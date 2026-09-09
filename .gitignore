@@ -1,0 +1,11 @@
+node_modules/
+.bun-cache/
+
+# 本地敏感配置
+.env
+
+# 编译产物与部署脚本
+sb-linux-x64
+install-service.sh
+
+*.log

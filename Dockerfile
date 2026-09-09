@@ -6,6 +6,7 @@
 # 运行阶段：可覆盖 RUNTIME_IMAGE（debian:trixie-slim 或 alpine）
 # ============================================================================
 ARG BUN_IMAGE=oven/bun:latest
+ARG RUNTIME_IMAGE=debian:trixie-slim
 FROM --platform=$BUILDPLATFORM ${BUN_IMAGE} AS build
 WORKDIR /app
 # 仅拷贝构建所需文件，保持上下文最小化
@@ -22,7 +23,6 @@ RUN ARCH=$(case "$TARGETARCH" in amd64) echo x64;; arm64) echo aarch64;; esac) \
        --outfile=/out/sb-bot
 
 # ------- 运行阶段 -------
-ARG RUNTIME_IMAGE=debian:trixie-slim
 FROM --platform=$TARGETPLATFORM ${RUNTIME_IMAGE}
 
 # CA 证书：Telegram / 论坛均走 HTTPS，debian/alpine 镜像默认不含

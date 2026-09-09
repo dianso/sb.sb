@@ -27,14 +27,6 @@
 
 > 容器镜像由 [CI](https://github.com/dianso/sb.sb/actions/workflows/ci.yml) 自动构建，覆盖 amd64 / arm64 双架构。
 
-### 二进制部署
-
-安装到指定目录并注册 systemd 服务（`install-service.sh` 未入库，见仓库 Release 附件）：
-
-```bash
-sudo bash install-service.sh   # 默认装到 /home/huo/sb 并创建 sb-bot.service
-```
-
 ### Docker 运行
 
 ```bash
@@ -43,6 +35,8 @@ docker run -d --name sb-bot --restart=always \
   -e SB_TELEGRAM_TOKEN=... -e SB_TELEGRAM_CHAT_ID=... \
   ghcr.io/dianso/sb.sb:latest
 ```
+
+> **部署前请先准备好 PostgreSQL**：本服务将帖子、关键词订阅与推送记录持久化到 PostgreSQL（连接参数见下方「快速开始 · 环境要求」）。表结构会在首次启动时自动创建（`ensureSbTable()`），无需手工执行 SQL，但需保证配置的数据库账号具备建表权限。
 
 ***
 

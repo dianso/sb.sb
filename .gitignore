@@ -6,6 +6,9 @@ node_modules/
 
 # 编译产物与部署脚本
 sb-linux-x64
+sb-linux-x64-musl
 install-service.sh
+install-service-alpine.sh
+install-service-debian.sh
 
 *.log

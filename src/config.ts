@@ -33,6 +33,7 @@ export const SB_FEEDS = [
   { name: "域名", url: "https://sb.sb/go/domains/rss.xml" },
   { name: "主机", url: "https://sb.sb/go/hosting/rss.xml" },
   { name: "硬件", url: "https://sb.sb/go/hardware/rss.xml" },
+  { name: "技术", url: "https://sb.sb/go/tech/rss.xml" },
   { name: "交易", url: "https://sb.sb/go/trade/rss.xml" },
   { name: "优惠", url: "https://sb.sb/go/discounts/rss.xml" },
   { name: "拼车", url: "https://sb.sb/go/cosub/rss.xml" },
@@ -40,7 +41,6 @@ export const SB_FEEDS = [
   { name: "推广", url: "https://sb.sb/go/promotion/rss.xml" },
   { name: "工作", url: "https://sb.sb/go/jobs/rss.xml" },
   { name: "投资", url: "https://sb.sb/go/invest/rss.xml" },
-  { name: "水区", url: "https://sb.sb/go/off-topic/rss.xml" },
   { name: "公告", url: "https://sb.sb/go/announcement/rss.xml" },
 ] as const;
 

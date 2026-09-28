@@ -1,9 +1,13 @@
 # sb.sb 论坛 RSS 推送 —— 持续集成 / 发布 / 容器镜像
 #
 # 触发：
-#   - 推送到 main：运行类型检查，并推送 ghcr 镜像（latest / main）
+#   - 推送到 main：运行类型检查，并推送 ghcr + Docker Hub 镜像（latest / main）
 #   - 推送 v* 标签：额外交叉编译 amd64/arm64（含 alpine 与 Windows）二进制，
-#                  发布到 GitHub Release，并推送 ghcr 版本标签
+#                  发布到 GitHub Release，并推送 ghcr + Docker Hub 版本标签
+#
+# 所需 Secrets（仓库 Settings → Secrets and variables → Actions）：
+#   - DOCKERHUB_USERNAME  Docker Hub 用户名（如 dianso）
+#   - DOCKERHUB_TOKEN     Docker Hub Access Token（需 read/write/delete 权限）
 name: ci
 
 on:
@@ -83,7 +87,7 @@ jobs:
           files: dist/*
           generate_release_notes: true
 
-  # ---- 构建并推送 ghcr 容器镜像（debian + alpine，支持 amd64/arm64）----
+  # ---- 构建并推送容器镜像到 GHCR + Docker Hub（debian + alpine，支持 amd64/arm64）----
   docker:
     runs-on: ubuntu-latest
     permissions:
@@ -95,11 +99,11 @@ jobs:
         flavor:
           - runtime: debian:trixie-slim   # glibc
             bun_suffix: ""
-            tag_suffix: ""                # ghcr.io/dianso/sb.sb:latest + :v<tag>
+            tag_suffix: ""                # :latest + :v<tag>
             alias: latest
           - runtime: alpine               # musl
             bun_suffix: "-musl"
-            tag_suffix: "-alpine"         # ghcr.io/dianso/sb.sb:alpine + :v<tag>-alpine
+            tag_suffix: "-alpine"         # :alpine + :v<tag>-alpine
             alias: alpine
     steps:
       - uses: actions/checkout@v4
@@ -110,6 +114,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -121,5 +130,7 @@ jobs:
           tags: |
             ghcr.io/dianso/sb.sb:${{ matrix.flavor.alias }}
             ghcr.io/dianso/sb.sb:${{ github.ref_name }}${{ matrix.flavor.tag_suffix }}
+            docker.io/dianso/sb.sb:${{ matrix.flavor.alias }}
+            docker.io/dianso/sb.sb:${{ github.ref_name }}${{ matrix.flavor.tag_suffix }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

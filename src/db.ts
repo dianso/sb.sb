@@ -110,7 +110,16 @@ export async function markSbPushed(guid: string): Promise<void> {
   await db`UPDATE sb_posts SET pushed_at = NOW() WHERE guid = ${guid}`;
 }
 
-/** 首轮启动静默：把当前全部记录标记为已推送，避免历史 ~550 条刷屏频道 */
+/** 全新部署判定：首轮插入前 sb_posts 是否为空（空表 = 首次部署，历史帖静默入库） */
+export async function isSbPostsEmpty(): Promise<boolean> {
+  const db = getSbSql();
+  const rows = (await db`SELECT COUNT(*)::int AS count FROM sb_posts`) as unknown as Array<
+    Record<string, unknown>
+  >;
+  return Number(rows[0]!["count"]) === 0;
+}
+
+/** 首次部署首轮静默：把当前全部记录标记为已推送，避免历史 ~550 条刷屏频道（进程重启不触发） */
 export async function markAllSbPushed(): Promise<void> {
   const db = getSbSql();
   await db`UPDATE sb_posts SET pushed_at = NOW() WHERE pushed_at IS NULL`;

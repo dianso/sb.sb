@@ -21,6 +21,7 @@ import {
   getPendingSbPosts,
   getSbKeywordPushedChats,
   insertSbPosts,
+  isSbPostsEmpty,
   markAllSbPushed,
   markSbPushed,
   recordSbKeywordPush,
@@ -154,7 +155,7 @@ async function pushKeywordMatches(posts: SbPostItem[]): Promise<void> {
 }
 
 // ---- 轮询状态 ----
-let booted = false; // 首轮是否已静默完成（至少一源成功抓取过）
+let firstBoot: boolean | null = null; // 全新部署判定：null=未判定；true=首轮插入前表为空（仅首次部署静默历史帖）
 let failStreak = 0; // 连续全败轮数（指数退避用）
 let backoffUntil = 0; // 退避截止时间戳
 let tableReady = false; // 建表兜底是否已执行
@@ -210,6 +211,12 @@ async function tickInner(): Promise<void> {
   }
   failStreak = 0;
 
+  // 全新部署判定（仅首个成功轮次执行一次）：插入前表为空 = 首次部署；
+  // 进程重启时表非空，不进入静默分支，停机期间的新帖与积压待推帖正常推送
+  if (firstBoot === null) {
+    firstBoot = await isSbPostsEmpty();
+  }
+
   // 新帖入库（ON CONFLICT 去重，仅真正新插入的返回）
   let fresh: SbPostItem[] = [];
   if (items.length > 0) {
@@ -217,11 +224,11 @@ async function tickInner(): Promise<void> {
     log(`解析 ${items.length} 条，新帖 ${fresh.length} 条`);
   }
 
-  // 首轮静默：历史帖全部标记已推送，不刷屏频道；关键词订阅同样不推历史帖
-  if (!booted) {
+  // 全新部署首轮静默：历史帖全部标记已推送，不刷屏频道；关键词订阅同样不推历史帖
+  if (firstBoot === true) {
+    firstBoot = false;
     await markAllSbPushed();
-    booted = true;
-    log("首轮抓取完成，历史帖已静默入库（不推送）");
+    log("首次部署抓取完成，历史帖已静默入库（不推送）");
     return;
   }
 

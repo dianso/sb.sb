@@ -35,6 +35,6 @@ if (!SB_TELEGRAM.token || !SB_TELEGRAM.chatId || !process.env.SB_DB_PASSWORD) {
 log(`启动：${SB_FEEDS.length} 个源，轮询 ${SB_POLL_INTERVAL_MS / 1000}s`);
 // 私聊交互：getUpdates 长轮询
 void startSbBotLoop();
-// 首轮立即执行（含建表兜底 + 历史帖静默入库），之后按间隔轮询
+// 首轮立即执行（含建表兜底；仅全新部署时历史帖静默入库），之后按间隔轮询
 await runSbTick();
 setInterval(() => void runSbTick(), SB_POLL_INTERVAL_MS);

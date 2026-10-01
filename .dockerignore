@@ -7,6 +7,5 @@ node_modules/
 .env
 *.log
 
-# 本地编译的二进制与部署脚本
+# 本地编译的二进制
 sb-linux-*
-install-service.sh

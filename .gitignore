@@ -4,11 +4,8 @@ node_modules/
 # 本地敏感配置
 .env
 
-# 编译产物与部署脚本
+# 编译产物
 sb-linux-x64
 sb-linux-x64-musl
-install-service.sh
-install-service-alpine.sh
-install-service-debian.sh
 
 *.log

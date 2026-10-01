@@ -5,6 +5,7 @@ node_modules/
 
 # 本地敏感配置与部署产物
 .env
+compose.yml
 *.log
 
 # 本地编译的二进制

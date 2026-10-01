@@ -1,0 +1,35 @@
+# ============================================================
+# sb.sb 论坛 RSS 推送 —— Docker Compose 演示配置
+#
+# 用法：
+#   1. 复制 .env.example 为 .env 并填入真实凭据（变量说明见其内部注释）
+#   2. docker compose up -d    启动
+#   3. docker compose logs -f  跟踪日志（应用日志直出 stdout，重启后仍可查）
+#
+# 说明：
+#   - 本文件为演示模板，随仓库提交
+#   - 本地实际部署建议复制为 compose.yml 再修改：Compose 会优先读取
+#     compose.yml，且该文件名已在 .gitignore 中排除，不会误提交真实凭据
+# ============================================================
+
+services:
+  sb-bot:
+    # 镜像标签二选一（均为 amd64 / arm64 双架构）：
+    #   latest  —— Debian trixie（glibc）
+    #   alpine  —— Alpine（musl，体积更小）
+    # 也可换用 Docker Hub 同名仓库：docker.io/dianso/sb.sb
+    image: ghcr.io/dianso/sb.sb:latest
+    container_name: sb-bot
+    restart: always
+
+    # PostgreSQL 与本服务同机部署时，容器内的 127.0.0.1 并不指向宿主机，
+    # 任选其一解除注释（PG 在其他机器则删除本段，并把 .env 的 SB_DB_HOST 改为实际地址）：
+    #   方式 a：host 网络（仅 Linux），.env 中的 127.0.0.1 原样可用
+    #network_mode: host
+    #   方式 b：host-gateway 映射，.env 中 SB_DB_HOST 改为 host.docker.internal
+    #extra_hosts:
+    #  - "host.docker.internal:host-gateway"
+
+    # 从同目录 .env 注入全部环境变量（本地 Bun 运行会自动加载 .env，
+    # 容器内没有该文件，必须由此注入；变量清单见 .env.example）
+    env_file: .env

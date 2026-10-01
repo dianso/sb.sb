@@ -4,6 +4,9 @@ node_modules/
 # 本地敏感配置
 .env
 
+# 本地 Compose 实际部署配置（含真实凭据；演示模板 docker-compose.yml 正常提交）
+compose.yml
+
 # 编译产物
 sb-linux-x64
 sb-linux-x64-musl

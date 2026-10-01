@@ -17,8 +17,8 @@ services:
     # 镜像标签二选一（均为 amd64 / arm64 双架构）：
     #   latest  —— Debian trixie（glibc）
     #   alpine  —— Alpine（musl，体积更小）
-    # 也可换用 Docker Hub 同名仓库：docker.io/dianso/sb.sb
-    image: ghcr.io/dianso/sb.sb:latest
+    # 也可换用 GHCR 同名仓库：ghcr.io/dianso/sb.sb
+    image: docker.io/dianso/sb.sb:latest
     container_name: sb-bot
     restart: always
 
